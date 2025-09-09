@@ -23,17 +23,18 @@ class DiMonitorApplication(Application):
         self.loop_target_period = 5
 
     async def setup(self):
+        print("---- RUNNING SETUP ----")
         self.ui = DiMonitorUI(self.config)
         
         self.triggered_count = self.get_tag("triggered_count", default=0)
         
-        self.trigger_alarm = await self.platform_iface.recv_di_pulses(
+        self.trigger_alarm = self.platform_iface.start_di_pulse_listener(
             self.config.get_di_channel(),
             self.on_triggered_pulse,
             self.config.get_triggered_state(),
         )
         
-        self.untrigger_alarm = await self.platform_iface.recv_di_pulses(
+        self.untrigger_alarm = self.platform_iface.start_di_pulse_listener(
             self.config.get_di_channel(),
             self.on_untriggered_pulse,
             self.config.get_untriggered_state(),
@@ -65,6 +66,7 @@ class DiMonitorApplication(Application):
         )
 
     async def main_loop(self):
+        print("---- RUNNING MAIN LOOP ----")
         logging.info("Main loop running...")
         print("Main loop running...")
-        asyncio.sleep(5)
+        await asyncio.sleep(5)
