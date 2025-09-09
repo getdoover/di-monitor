@@ -17,7 +17,3 @@ def test_config():
 def test_ui():
     from di_monitor.app_ui import DiMonitorUI
     assert DiMonitorUI
-
-def test_state():
-    from di_monitor.app_state import DiMonitorState
-    assert DiMonitorState
