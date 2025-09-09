@@ -1,36 +1,31 @@
 from pydoover import ui
 
+from .app_config import DiMonitorConfig
 
 class DiMonitorUI:
-    def __init__(self):
-        self.is_working = ui.BooleanVariable("is_working", "We Working?")
-        self.uptime = ui.DateTimeVariable("uptime", "Started")
-
-        self.send_alert = ui.Action("send_alert", "Send message as alert", position=1)
-        self.text_parameter = ui.TextParameter("test_message", "Put in a message")
-
-        self.test_output = ui.TextVariable("test_output", "This is message we got")
-
-        self.battery = ui.Submodule("battery", "Battery Module")
-        self.battery_voltage = ui.NumericVariable(
-            "voltage", "Battery Voltage", precision=2, ranges=[
-                ui.Range("Low", 0, 10, ui.Colour.red),
-                ui.Range("Normal", 10, 20, ui.Colour.green),
-                ui.Range("High", 20, 30, ui.Colour.blue),
-            ])
-
-        self.battery_low_voltage_alert = ui.NumericParameter("low_voltage_alert", "Low Voltage Alert")
-        self.battery_charge_mode = ui.StateCommand("charge_mode", "Charge Mode", user_options=[
-            ui.Option("charge", "Charge"),
-            ui.Option("discharge", "Discharge"),
-            ui.Option("idle", "Idle")
-        ])
-        self.battery.add_children(self.battery_voltage, self.battery_low_voltage_alert, self.battery_charge_mode)
-
+    def __init__(self, config: DiMonitorConfig):
+        self.config = config
+        
+        self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name())
+        self.last_triggered_duration = ui.NumericVariable("last_triggered_duration", "Last Triggered Duration")
+        if self.config.get_show_triggered_count():
+            self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
+        else:
+            self.triggered_count = None
+            
     def fetch(self):
-        return self.is_working, self.uptime, self.send_alert, self.text_parameter, self.test_output, self.battery
+        result = [self.di_state, self.last_triggered_duration]
+        if self.config.get_show_triggered_count():
+            result.append(self.triggered_count)
+        return result
 
-    def update(self, is_working, voltage, uptime):
-        self.is_working.update(is_working)
-        self.uptime.update(uptime)
-        self.battery_voltage.update(voltage)
+    def update(self, di_state=None, last_triggered_duration=None):
+        if di_state is not None:    
+            self.di_state.update(di_state)
+            
+        if last_triggered_duration is not None:
+            self.last_triggered_duration.update(last_triggered_duration)
+
+    def update_triggered_count(self, triggered_count):
+        if self.config.get_show_triggered_count():
+            self.triggered_count.update(triggered_count)

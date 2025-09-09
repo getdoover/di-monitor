@@ -1,6 +1,7 @@
 {
-    "simulator_app_key": "sim_app_key",
-    "digital_input_count": 1,
-    "digital_output_count": 2,
-    "a_funny_message": "yeeha"
+    "di_name": "Pump Fault",
+    "di_channel": 0,
+    "alert_message": "Pump has just entered fault state",
+    "alert_complete_message": "Pump is no longer faulting",
+    "show_triggered_count": true
 }

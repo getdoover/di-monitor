@@ -18,33 +18,63 @@
             "title": "Application Config",
             "type": "object",
             "properties": {
-                "digital_outputs_enabled": {
-                    "title": "Digital Outputs Enabled",
-                    "x-name": "digital_outputs_enabled",
-                    "x-hidden": false,
-                    "type": "boolean",
-                    "default": true
-                },
-                "a_funny_message": {
-                    "title": "A Funny Message",
-                    "x-name": "a_funny_message",
+                "di_name": {
+                    "title": "DI Name",
+                    "x-name": "di_name",
                     "x-hidden": false,
                     "type": "string"
                 },
-                "simulator_app_key": {
-                    "format": "doover-application",
-                    "title": "Simulator App Key",
-                    "x-name": "simulator_app_key",
+                "di_channel": {
+                    "title": "DI Channel",
+                    "x-name": "di_channel",
+                    "x-hidden": false,
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "di_triggered_state": {
+                    "enum": [
+                        "rising",
+                        "falling",
+                        "ai_rising",
+                        "ai_falling"
+                    ],
+                    "title": "DI Triggered State",
+                    "x-name": "di_triggered_state",
                     "x-hidden": false,
                     "type": "string",
-                    "description": "The app key for the simulator"
+                    "default": "rising"
+                },
+                "alert_message": {
+                    "title": "Alert Message",
+                    "x-name": "alert_message",
+                    "x-hidden": false,
+                    "type": "string"
+                },
+                "alert_complete_message": {
+                    "title": "Alert Complete Message",
+                    "x-name": "alert_complete_message",
+                    "x-hidden": false,
+                    "type": "string"
+                },
+                "show_triggered_count": {
+                    "title": "Show Triggered Count",
+                    "x-name": "show_triggered_count",
+                    "x-hidden": false,
+                    "type": "boolean"
                 }
             },
             "additionalElements": true,
             "required": [
-                "a_funny_message",
-                "simulator_app_key"
+                "di_name",
+                "di_channel",
+                "alert_message",
+                "alert_complete_message",
+                "show_triggered_count"
             ]
-        }
+        },
+        "key": "2a099e74-0af5-439e-a17b-f8d1bde1bbf5",
+        "code_repo_key": null,
+        "repo_branch": "main",
+        "staging_config": {}
     }
 }

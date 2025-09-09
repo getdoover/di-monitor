@@ -1,55 +1,70 @@
 import logging
 import time
+import asyncio
 
-from pydoover.docker import Application
 from pydoover import ui
 
+from pydoover.docker import Application
 from .app_config import DiMonitorConfig
 from .app_ui import DiMonitorUI
-from .app_state import DiMonitorState
+from .utils import seconds_to_hms
 
 log = logging.getLogger()
 
 class DiMonitorApplication(Application):
     config: DiMonitorConfig  # not necessary, but helps your IDE provide autocomplete!
-
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.started: float = time.time()
         self.ui: DiMonitorUI = None
-        self.state: DiMonitorState = None
+        
+        self.loop_target_period = 5
 
     async def setup(self):
-        self.ui = DiMonitorUI()
-        self.state = DiMonitorState()
+        self.ui = DiMonitorUI(self.config)
+        
+        self.triggered_count = self.get_tag("triggered_count", default=0)
+        
+        self.trigger_alarm = await self.platform_iface.recv_di_pulses(
+            self.config.get_di_channel(),
+            self.on_triggered_pulse,
+            self.config.get_triggered_state(),
+        )
+        
+        self.untrigger_alarm = await self.platform_iface.recv_di_pulses(
+            self.config.get_di_channel(),
+            self.on_untriggered_pulse,
+            self.config.get_untriggered_state(),
+        )
+        
         self.ui_manager.add_children(*self.ui.fetch())
-
-    async def main_loop(self):
-        log.info(f"State is: {self.state.state}")
-
-        # a random value we set inside our simulator. Go check it out in simulators/sample!
-        random_value = self.get_tag("random_value", self.config.sim_app_key.value)
-        log.info("Random value from simulator: %s", random_value)
-
+        print("setup complete")
+        logging.info(f"DI {self.config.get_di_name()} is configured to monitor channel {self.config.get_di_channel()} in state {self.config.get_triggered_state()}")
+        # self.ui_manager.sync_ui()
+        
+    def on_triggered_pulse(self, di, val, dt_sec, counter, edge):
+        log.info(f"DI {di} triggered pulse: {val}, {dt_sec}, {counter}, {edge}")
+        self.triggered_count += 1
+        self.set_tag("triggered_count", self.triggered_count)
+        self.publish_to_channel("significantEvent",self.config.get_alert_msg())
         self.ui.update(
-            True,
-            random_value,
-            time.time() - self.started,
+            di_state=val,
+            last_triggered_duration=seconds_to_hms(-1)
+        )
+        self.ui.update_triggered_count(self.triggered_count)
+        
+    def on_untriggered_pulse(self, di, val, dt_sec, counter, edge):
+        log.info(f"DI {di} untriggered pulse: {val}, {dt_sec}, {counter}, {edge}")
+        hms = seconds_to_hms(dt_sec)
+        self.publish_to_channel("significantEvent",self.config.get_untriggered_msg())
+        self.ui.update(
+            di_state=val,
+            last_triggered_duration=hms
         )
 
-    @ui.callback("send_alert")
-    async def on_send_alert(self, new_value):
-        log.info(f"Sending alert: {self.ui.test_output.current_value}")
-        await self.publish_to_channel("significantAlerts", self.ui.test_output.current_value)
-        self.ui.send_alert.coerce(None)
-
-    @ui.callback("test_message")
-    async def on_text_parameter_change(self, new_value):
-        log.info(f"New value for test message: {new_value}")
-        # Set the value as an output to the corresponding variable is this case
-        self.ui.test_output.update(new_value)
-
-    @ui.callback("charge_mode")
-    async def on_state_command(self, new_value):
-        log.info(f"New value for state command: {new_value}")
+    async def main_loop(self):
+        logging.info("Main loop running...")
+        print("Main loop running...")
+        asyncio.sleep(5)
