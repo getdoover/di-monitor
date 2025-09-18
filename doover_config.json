@@ -35,14 +35,28 @@
                     "enum": [
                         "rising",
                         "falling",
-                        "ai_rising",
-                        "ai_falling"
+                        "VI+",
+                        "VI-"
                     ],
                     "title": "DI Triggered State",
                     "x-name": "di_triggered_state",
                     "x-hidden": false,
                     "type": "string",
                     "default": "rising"
+                },
+                "send_triggered_alert": {
+                    "title": "Send Triggered Alert",
+                    "x-name": "send_triggered_alert",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "default": true
+                },
+                "send_untriggered_alert": {
+                    "title": "Send Untriggered Alert",
+                    "x-name": "send_untriggered_alert",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "default": false
                 },
                 "alert_message": {
                     "title": "Alert Message",
@@ -56,11 +70,29 @@
                     "x-hidden": false,
                     "type": "string"
                 },
+                "voltage_state": {
+                    "enum": [
+                        "12V",
+                        "24V"
+                    ],
+                    "title": "Voltage State",
+                    "x-name": "voltage_state",
+                    "x-hidden": false,
+                    "type": "string",
+                    "default": "24V"
+                },
                 "show_triggered_count": {
                     "title": "Show Triggered Count",
                     "x-name": "show_triggered_count",
                     "x-hidden": false,
                     "type": "boolean"
+                },
+                "show_triggered_duration": {
+                    "title": "Show Triggered Duration",
+                    "x-name": "show_triggered_duration",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "default": true
                 }
             },
             "additionalElements": true,

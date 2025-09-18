@@ -22,3 +22,4 @@ services:
     environment:
       - APP_KEY=test_app_key
       - CONFIG_FP=/app/simulators/app_config.json
+    entrypoint: ["doover-app-run", "--dda-uri=192.168.5.10:50051", "--plt-uri=192.168.5.10:50053"]

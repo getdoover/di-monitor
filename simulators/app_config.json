@@ -1,7 +1,12 @@
 {
     "di_name": "Pump Fault",
     "di_channel": 0,
+    "send_triggered_alert": true,
+    "send_untriggered_alert": false,
     "alert_message": "Pump has just entered fault state",
     "alert_complete_message": "Pump is no longer faulting",
-    "show_triggered_count": true
+    "voltage_state": "24V",
+    "di_triggered_state": "VI+",
+    "show_triggered_count": true,
+    "show_triggered_duration": true
 }
