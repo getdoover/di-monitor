@@ -27,28 +27,10 @@ class DiMonitorApplication(Application):
         self.ui = DiMonitorUI(self.config)
         
         self.loop_target_period = 1
-        
         self.last_triggered_time = None
         
         self.triggered_duration = self.get_tag("triggered_duration", default=0)
         self.triggered_count = self.get_tag("triggered_count", default=0)
-        
-        print("settings alarm")
-        print("self.config.get_triggered_state(): ", self.config.get_triggered_state())
-        print("self.config.get_di_channel(): ", self.config.get_di_channel())
-        print("self.config.get_untriggered_state(): ", self.config.get_untriggered_state())
-        
-        self.trigger_alarm = self.platform_iface.start_di_pulse_listener(
-            self.config.get_di_channel(),
-            self.on_triggered_pulse,
-            self.config.get_triggered_state(),
-        )
-        
-        self.untrigger_alarm = self.platform_iface.start_di_pulse_listener(
-            self.config.get_di_channel(),
-            self.on_untriggered_pulse,
-            self.config.get_untriggered_state(),
-        )
         
         self.ui_manager.add_children(*self.ui.fetch())
         
@@ -58,13 +40,10 @@ class DiMonitorApplication(Application):
             triggered_duration=seconds_to_hms(self.triggered_duration),
             triggered_count=self.triggered_count,
         )
-        
-        print("setup complete")
-        logging.info(f"DI {self.config.get_di_name()} is configured to monitor channel {self.config.get_di_channel()} in state {self.config.get_triggered_state()}")
         # self.ui_manager.sync_ui()
         
     async def on_triggered_pulse(self, di=None, val=None, dt_sec=None, counter=None, edge=None):
-        log.info(f"DI {di} triggered pulse: {val}, {dt_sec}, {counter}, {edge}")
+        log.info("Input Activated")
         self.last_triggered_time = time.monotonic()
         self.triggered_count += 1
         await self.set_tag("triggered_count", self.triggered_count)
@@ -77,11 +56,12 @@ class DiMonitorApplication(Application):
         self.ui.update_triggered_count(self.triggered_count)
         
     async def on_untriggered_pulse(self, di=None, val=None, dt_sec=None, counter=None, edge=None):
-        log.info(f"DI {di} untriggered pulse: {val}, {dt_sec}, {counter}, {edge}")
+        log.info("Input Deactivated")
         await self.triggered_duration_complete()
+        
         if self.config.send_untriggered_alert.value:
             await self.publish_to_channel("significantEvent",self.config.get_untriggered_msg())
-        
+            
         self.ui.update(
             di_state=False,
         )
@@ -105,6 +85,7 @@ class DiMonitorApplication(Application):
     async def get_input_state(self):
         if self.config.get_is_ai():
             di_val = await self.get_ai(self.config.get_di_channel())
+            di_val = di_val > 8
         else:
             di_val = await self.get_di(self.config.get_di_channel())
         return di_val

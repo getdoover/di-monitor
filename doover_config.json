@@ -22,13 +22,15 @@
                     "title": "DI Name",
                     "x-name": "di_name",
                     "x-hidden": false,
-                    "type": "string"
+                    "type": "string",
+                    "description": "The name of the Digital Input to monitor"
                 },
                 "di_channel": {
                     "title": "DI Channel",
                     "x-name": "di_channel",
                     "x-hidden": false,
                     "type": "integer",
+                    "description": "The channel of the Digital Input to monitor",
                     "minimum": 0
                 },
                 "di_triggered_state": {
@@ -42,6 +44,7 @@
                     "x-name": "di_triggered_state",
                     "x-hidden": false,
                     "type": "string",
+                    "description": "The state of the Digital Input to monitor, rising or falling for a digital input, or VI+ or VI- for an analog input",
                     "default": "rising"
                 },
                 "send_triggered_alert": {
@@ -49,6 +52,7 @@
                     "x-name": "send_triggered_alert",
                     "x-hidden": false,
                     "type": "boolean",
+                    "description": "Whether or not to send an alert when the Digital Input is triggered",
                     "default": true
                 },
                 "send_untriggered_alert": {
@@ -56,19 +60,22 @@
                     "x-name": "send_untriggered_alert",
                     "x-hidden": false,
                     "type": "boolean",
+                    "description": "Whether or not to send an alert when the Digital Input is untriggered",
                     "default": false
                 },
                 "alert_message": {
                     "title": "Alert Message",
                     "x-name": "alert_message",
                     "x-hidden": false,
-                    "type": "string"
+                    "type": "string",
+                    "description": "The message to send when the Digital Input is triggered"
                 },
                 "alert_complete_message": {
                     "title": "Alert Complete Message",
                     "x-name": "alert_complete_message",
                     "x-hidden": false,
-                    "type": "string"
+                    "type": "string",
+                    "description": "The message to send when the Digital Input is untriggered"
                 },
                 "voltage_state": {
                     "enum": [
@@ -79,19 +86,22 @@
                     "x-name": "voltage_state",
                     "x-hidden": false,
                     "type": "string",
+                    "description": "The voltage state of the Digital Input",
                     "default": "24V"
                 },
                 "show_triggered_count": {
                     "title": "Show Triggered Count",
                     "x-name": "show_triggered_count",
                     "x-hidden": false,
-                    "type": "boolean"
+                    "type": "boolean",
+                    "description": "Whether or not to show the triggered count"
                 },
                 "show_triggered_duration": {
                     "title": "Show Triggered Duration",
                     "x-name": "show_triggered_duration",
                     "x-hidden": false,
                     "type": "boolean",
+                    "description": "Whether or not to show the triggered duration",
                     "default": true
                 }
             },

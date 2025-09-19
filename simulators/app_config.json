@@ -5,7 +5,7 @@
     "send_untriggered_alert": false,
     "alert_message": "Pump has just entered fault state",
     "alert_complete_message": "Pump is no longer faulting",
-    "voltage_state": "24V",
+    "voltage_state": "12V",
     "di_triggered_state": "VI+",
     "show_triggered_count": true,
     "show_triggered_duration": true
