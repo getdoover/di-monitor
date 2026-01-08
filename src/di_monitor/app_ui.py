@@ -5,6 +5,20 @@ from .app_config import DiMonitorConfig
 class DiMonitorUI:
     def __init__(self, config: DiMonitorConfig):
         self.config = config
+
+        self.alert_stream = ui.AlertStream(
+            "significantEvent", "Notify me of any problems"
+        )
+
+        self.send_alert_toggle = ui.StateCommand(
+            "alertSetting",
+            "Send Alerts",
+            user_options=[
+                ui.Option("true", "Yes"),
+                ui.Option("false", "No"),
+            ],
+            default="false"
+        )
         
         self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name())
         self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration")
@@ -12,7 +26,7 @@ class DiMonitorUI:
         self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
         
     def fetch(self):
-        result = [self.di_state, self.last_triggered_duration]
+        result = [ self.alert_stream, self.di_state, self.last_triggered_duration, self.send_alert_toggle]
         
         if self.config.get_show_triggered_count():
             result.append(self.triggered_count)
