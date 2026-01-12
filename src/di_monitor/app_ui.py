@@ -17,23 +17,15 @@ class DiMonitorUI:
         
     def fetch(self):
         result = [ self.alert_stream, self.di_state]
-
-        element_count = 0
         
         if self.config.get_show_triggered_count():
             result.append(self.triggered_count)
-            element_count += 1
             
         if self.config.show_triggered_duration.value:
             result.append(self.triggered_duration)
-            element_count += 1
         
         if self.config.get_show_last_triggered_duration():
             result.append(self.last_triggered_duration)
-            element_count += 1
-        
-        if element_count == 0:
-            self.set_variant("stacked")
         
         return result
 
