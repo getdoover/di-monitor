@@ -103,6 +103,22 @@
                     "type": "boolean",
                     "description": "Whether or not to show the triggered duration",
                     "default": true
+                },
+                "show_last_triggered_duration": {
+                    "title": "Show Last Triggered Duration",
+                    "x-name": "show_last_triggered_duration",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "description": "Whether or not to show the last triggered duration",
+                    "default": true
+                },
+                "position": {
+                    "title": "Position",
+                    "x-name": "position",
+                    "x-hidden": true,
+                    "type": "integer",
+                    "description": "The position of the application in the UI.",
+                    "default": 50
                 }
             },
             "additionalElements": true,

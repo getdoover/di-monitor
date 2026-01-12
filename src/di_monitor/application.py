@@ -1,7 +1,7 @@
 import logging
 import time
 
-from pydoover import ui
+# from pydoover import ui
 
 from pydoover.docker import Application
 from .app_config import DiMonitorConfig
@@ -47,7 +47,7 @@ class DiMonitorApplication(Application):
         self.last_triggered_time = time.monotonic()
         self.triggered_count += 1
         await self.set_tag("triggered_count", self.triggered_count)
-        if self.config.send_triggered_alert.value and self.ui.send_alert_toggle.current_value == "true":
+        if self.config.send_triggered_alert.value:
             await self.publish_to_channel("significantEvent",self.config.get_alert_msg())
         self.ui.update(
             di_state=True,
@@ -59,7 +59,7 @@ class DiMonitorApplication(Application):
         log.info("Input Deactivated")
         await self.triggered_duration_complete()
         
-        if self.config.send_untriggered_alert.value and self.ui.send_alert_toggle.current_value == "true":
+        if self.config.send_untriggered_alert.value:
             await self.publish_to_channel("significantEvent",self.config.get_untriggered_msg())
             
         self.ui.update(

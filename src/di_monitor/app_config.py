@@ -51,7 +51,6 @@ class DiMonitorConfig(config.Schema):
                 "untriggered"
             )
         )
-        
         self.alert_msg = config.String(
             "Alert Message",
             description="The message to send when the Digital Input is triggered"
@@ -75,6 +74,17 @@ class DiMonitorConfig(config.Schema):
             default=True,
             description="Whether or not to show the triggered duration"
         )
+        self.show_last_triggered_duration = config.Boolean(
+            "Show Last Triggered Duration",
+            default=True,
+            description="Whether or not to show the last triggered duration"
+        )
+        self.position = config.Integer(
+            "Position",
+            description="The position of the application in the UI.",
+            default=50,
+            hidden=True,
+        )
         
     def get_di_name(self):
         return self.di_name.value
@@ -84,6 +94,9 @@ class DiMonitorConfig(config.Schema):
     
     def get_show_triggered_count(self):
         return self.show_triggered_count.value
+
+    def get_show_last_triggered_duration(self):
+        return self.show_last_triggered_duration.value
     
     def get_untriggered_msg(self):
         return self.untriggered_msg.value
@@ -137,6 +150,9 @@ class DiMonitorConfig(config.Schema):
                     return DiState.AI_RISING.value + "8"
                 else:
                     return DiState.AI_RISING.value + "18"
+
+    def get_position(self):
+        return self.position.value
 
 
 def export():

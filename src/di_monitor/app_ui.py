@@ -9,30 +9,31 @@ class DiMonitorUI:
         self.alert_stream = ui.AlertStream(
             "significantEvent", "Notify me of any problems"
         )
-
-        self.send_alert_toggle = ui.StateCommand(
-            "alertSetting",
-            "Send Alerts",
-            user_options=[
-                ui.Option("true", "Yes"),
-                ui.Option("false", "No"),
-            ],
-            default="false"
-        )
         
-        self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name())
-        self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration")
-        self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration")
-        self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
+        self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name(), position=self.config.get_position())
+        self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration", position=self.config.get_position())
+        self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration", position=self.config.get_position())
+        self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count", position=self.config.get_position())
         
     def fetch(self):
-        result = [ self.alert_stream, self.di_state, self.last_triggered_duration, self.send_alert_toggle]
+        result = [ self.alert_stream, self.di_state]
+
+        element_count = 0
         
         if self.config.get_show_triggered_count():
             result.append(self.triggered_count)
+            element_count += 1
             
         if self.config.show_triggered_duration.value:
             result.append(self.triggered_duration)
+            element_count += 1
+        
+        if self.config.get_show_last_triggered_duration():
+            result.append(self.last_triggered_duration)
+            element_count += 1
+        
+        if element_count == 0:
+            self.set_variant("stacked")
         
         return result
 
