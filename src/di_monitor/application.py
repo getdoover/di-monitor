@@ -40,6 +40,9 @@ class DiMonitorApplication(Application):
             triggered_duration=seconds_to_hms(self.triggered_duration),
             triggered_count=self.triggered_count,
         )
+
+        if not self.config.get_show_triggered_count() and not self.config.get_show_triggered_duration() and not self.config.get_show_last_triggered_duration():
+            self.ui_manager.set_variant("stacked")
         # self.ui_manager.sync_ui()
         
     async def on_triggered_pulse(self, di=None, val=None, dt_sec=None, counter=None, edge=None):

@@ -83,7 +83,6 @@ class DiMonitorConfig(config.Schema):
             "Position",
             description="The position of the application in the UI.",
             default=50,
-            hidden=True,
         )
         
     def get_di_name(self):
