@@ -10,10 +10,10 @@ class DiMonitorUI:
             "significantEvent", "Notify me of any problems"
         )
         
-        self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name(), position=self.config.get_position())
-        self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration", position=self.config.get_position())
-        self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration", position=self.config.get_position())
-        self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count", position=self.config.get_position())
+        self.di_state = ui.BooleanVariable("di_state", self.config.get_di_name())
+        self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration")
+        self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration")
+        self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
         
     def fetch(self):
         result = [ self.alert_stream, self.di_state]

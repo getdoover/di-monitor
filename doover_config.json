@@ -75,7 +75,8 @@
                     "x-name": "alert_complete_message",
                     "x-hidden": false,
                     "type": "string",
-                    "description": "The message to send when the Digital Input is untriggered"
+                    "description": "The message to send when the Digital Input is untriggered",
+                    "default": ""
                 },
                 "voltage_state": {
                     "enum": [
@@ -118,15 +119,17 @@
                     "x-hidden": false,
                     "type": "integer",
                     "description": "The position of the application in the UI.",
-                    "default": 50
+                    "default": 50,
+                    "minimum": 0,
+                    "maximum": 200
                 }
+                
             },
             "additionalElements": true,
             "required": [
                 "di_name",
                 "di_channel",
                 "alert_message",
-                "alert_complete_message",
                 "show_triggered_count"
             ]
         },

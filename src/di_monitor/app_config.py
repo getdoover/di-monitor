@@ -57,6 +57,7 @@ class DiMonitorConfig(config.Schema):
         )
         self.untriggered_msg = config.String(
             "Alert Complete Message",
+            default="",
             description="The message to send when the Digital Input is untriggered"
         )
         self.voltage_state_enum = config.Enum(
@@ -81,8 +82,10 @@ class DiMonitorConfig(config.Schema):
         )
         self.position = config.Integer(
             "Position",
-            description="The position of the application in the UI.",
-            default=50,
+            description="The position of the pump monitor app in the UI. Smaller is higher, larger is lower. 100 is the default position of most apps.",
+            default=100,
+            minimum=0,
+            maximum=200,
         )
         
     def get_di_name(self):

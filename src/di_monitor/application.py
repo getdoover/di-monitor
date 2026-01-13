@@ -41,6 +41,8 @@ class DiMonitorApplication(Application):
             triggered_count=self.triggered_count,
         )
 
+        self.ui_manager.set_position(self.config.position.value)
+
         if not self.config.get_show_triggered_count() and not self.config.show_triggered_duration.value and not self.config.get_show_last_triggered_duration():
             self.ui_manager.set_variant("stacked")
         # self.ui_manager.sync_ui()
