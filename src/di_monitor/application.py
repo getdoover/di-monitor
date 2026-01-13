@@ -28,6 +28,7 @@ class DiMonitorApplication(Application):
         
         self.loop_target_period = 1
         self.last_triggered_time = None
+        self.last_triggered_datetime = None
         
         self.triggered_duration = self.get_tag("triggered_duration", default=0)
         self.triggered_count = self.get_tag("triggered_count", default=0)
@@ -50,6 +51,7 @@ class DiMonitorApplication(Application):
     async def on_triggered_pulse(self, di=None, val=None, dt_sec=None, counter=None, edge=None):
         log.info("Input Activated")
         self.last_triggered_time = time.monotonic()
+        self.last_triggered_datetime = time.time()
         self.triggered_count += 1
         await self.set_tag("triggered_count", self.triggered_count)
         if self.config.send_triggered_alert.value:
@@ -113,5 +115,5 @@ class DiMonitorApplication(Application):
                 # manually trigger event incase the pulse counter misses a pulse
                 await self.manually_trigger()
 
-        if self.config.show_last_triggered_time.value:
-            self.ui.update(last_triggered_time_string=time.strftime("%d-%m-%Y %H:%M:%S", time.localtime(self.last_triggered_time)))
+        if self.config.show_last_triggered_time.value and self.last_triggered_datetime is not None:
+            self.ui.update(last_triggered_time_string=time.strftime("%d-%m-%Y %H:%M:%S", time.localtime(self.last_triggered_datetime)))
