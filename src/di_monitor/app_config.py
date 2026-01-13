@@ -80,12 +80,22 @@ class DiMonitorConfig(config.Schema):
             default=True,
             description="Whether or not to show the last triggered duration"
         )
+        self.show_last_triggered_time = config.Boolean(
+            "Show Last Triggered Time",
+            default=False,
+            description="Whether or not to show the last triggered time"
+        )
         self.position = config.Integer(
             "Position",
             description="The position of the pump monitor app in the UI. Smaller is higher, larger is lower. 100 is the default position of most apps.",
             default=100,
             minimum=0,
             maximum=200,
+        )
+        self.stacked = config.Boolean(
+            "Stacked",
+            default=False,
+            description="Whether or not to stack the app in the UI. If True, the elements of the app will appear outside of a container. If False, the elements of the app will appear inside a container."
         )
         
     def get_di_name(self):

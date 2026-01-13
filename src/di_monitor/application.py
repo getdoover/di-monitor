@@ -43,7 +43,7 @@ class DiMonitorApplication(Application):
 
         self.ui_manager.set_position(self.config.position.value)
 
-        if not self.config.get_show_triggered_count() and not self.config.show_triggered_duration.value and not self.config.get_show_last_triggered_duration():
+        if self.config.stacked.value:
             self.ui_manager.set_variant("stacked")
         # self.ui_manager.sync_ui()
         
@@ -112,4 +112,6 @@ class DiMonitorApplication(Application):
             else:
                 # manually trigger event incase the pulse counter misses a pulse
                 await self.manually_trigger()
-                
+
+        if self.config.get_show_last_triggered_time():
+            self.ui.update(last_triggered_time_string=time.strftime("%d-%m-%Y %H:%M:%S", time.localtime(self.last_triggered_time)))

@@ -113,6 +113,14 @@
                     "description": "Whether or not to show the last triggered duration",
                     "default": true
                 },
+                "show_last_triggered_time": {
+                    "title": "Show Last Triggered Time",
+                    "x-name": "show_last_triggered_time",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "description": "Whether or not to show the last triggered time",
+                    "default": false
+                },
                 "position": {
                     "title": "Position",
                     "x-name": "position",
@@ -122,6 +130,14 @@
                     "default": 100,
                     "minimum": 0,
                     "maximum": 200
+                },
+                "stacked": {
+                    "title": "Stacked",
+                    "x-name": "stacked",
+                    "x-hidden": false,
+                    "type": "boolean",
+                    "description": "Whether or not to stack the app in the UI. If True, the elements of the app will appear outside of a container. If False, the elements of the app will appear inside a container.",
+                    "default": false
                 }
             },
             "additionalElements": true,
