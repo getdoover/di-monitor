@@ -33,7 +33,7 @@ class DiMonitorUI:
         
         return result
 
-    def update(self, di_state=None, last_triggered_duration=None, triggered_duration=None, triggered_count=None):
+    def update(self, di_state=None, last_triggered_duration=None, triggered_duration=None, triggered_count=None, last_triggered_time_string=None):
         if di_state is not None: 
             self.di_state.update(di_state)
             
@@ -45,6 +45,9 @@ class DiMonitorUI:
             
         if triggered_count is not None:
             self.triggered_count.update(triggered_count)
+
+        if last_triggered_time_string is not None:
+            self.last_triggered_time_string.update(last_triggered_time_string)
 
     def update_triggered_count(self, triggered_count):
         if self.config.get_show_triggered_count():
