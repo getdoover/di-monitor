@@ -28,7 +28,7 @@ class DiMonitorUI:
         if self.config.get_show_last_triggered_duration():
             result.append(self.last_triggered_duration)
 
-        if self.config.get_show_last_triggered_time():
+        if self.config.show_last_triggered_time.value:
             result.append(self.last_triggered_time_string)
         
         return result
