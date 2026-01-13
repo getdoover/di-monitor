@@ -26,7 +26,7 @@ class DiMonitorApplication(Application):
 
     async def setup(self):
         print("---- RUNNING SETUP ----")
-        self.ui = DiMonitorUI(self.config)
+        self.ui = DiMonitorUI(self.config, self.app_display_name)
         
         self.loop_target_period = 1
         self.last_triggered_time = None

@@ -3,8 +3,9 @@ from pydoover import ui
 from .app_config import DiMonitorConfig
 
 class DiMonitorUI:
-    def __init__(self, config: DiMonitorConfig):
+    def __init__(self, config: DiMonitorConfig, app_name: str):
         self.config = config
+        self.app_name = app_name
 
         self.alert_stream = ui.AlertStream(
             "significantEvent", "Notify me of any problems"
@@ -14,7 +15,7 @@ class DiMonitorUI:
         self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration")
         self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration")
         self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
-        self.last_triggered_time_string = ui.TextVariable("last_triggered_time_string", "Last Triggered Time")
+        self.last_triggered_time_string = ui.TextVariable("last_triggered_time_string", f"Last Triggered {self.app_name}")
         
     def fetch(self):
         result = [ self.alert_stream, self.di_state]
