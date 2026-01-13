@@ -85,6 +85,11 @@ class DiMonitorConfig(config.Schema):
             default=False,
             description="Whether or not to show the last triggered time"
         )
+        self.timezone = config.String(
+            "Timezone",
+            default="UTC",
+            description="Timezone for displaying the last triggered time (e.g. Australia/Sydney, America/New_York)"
+        )
         self.position = config.Integer(
             "Position",
             description="The position of the pump monitor app in the UI. Smaller is higher, larger is lower. 100 is the default position of most apps.",

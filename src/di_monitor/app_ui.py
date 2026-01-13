@@ -14,7 +14,7 @@ class DiMonitorUI:
         self.last_triggered_duration = ui.TextVariable("last_triggered_duration", "Last Triggered Duration")
         self.triggered_duration = ui.TextVariable("triggered_duration", "Triggered Duration")
         self.triggered_count = ui.NumericVariable("triggered_count", "Triggered Count")
-        self.last_triggered_time_string = ui.TextVariable("last_triggered_time_string", "Last Triggered Time String")
+        self.last_triggered_time_string = ui.TextVariable("last_triggered_time_string", "Last Triggered Time")
         
     def fetch(self):
         result = [ self.alert_stream, self.di_state]

@@ -1,5 +1,7 @@
 import logging
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # from pydoover import ui
 
@@ -116,4 +118,6 @@ class DiMonitorApplication(Application):
                 await self.manually_trigger()
 
         if self.config.show_last_triggered_time.value and self.last_triggered_datetime is not None:
-            self.ui.update(last_triggered_time_string=time.strftime("%d-%m-%Y %H:%M:%S", time.localtime(self.last_triggered_datetime)))
+            tz = ZoneInfo(self.config.timezone.value)
+            dt = datetime.fromtimestamp(self.last_triggered_datetime, tz=tz)
+            self.ui.update(last_triggered_time_string=dt.strftime("%-I:%M:%S %p %-d/%-m/%Y"))

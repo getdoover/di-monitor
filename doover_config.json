@@ -121,6 +121,14 @@
                     "description": "Whether or not to show the last triggered time",
                     "default": false
                 },
+                "timezone": {
+                    "title": "Timezone",
+                    "x-name": "timezone",
+                    "x-hidden": false,
+                    "type": "string",
+                    "description": "Timezone for displaying the last triggered time (e.g. Australia/Sydney, America/New_York)",
+                    "default": "UTC"
+                },
                 "position": {
                     "title": "Position",
                     "x-name": "position",
