@@ -1,0 +1,14 @@
+{
+    "APP_INSTALL_KEY": "di_monitor_oil_cooler_fan",
+    "APP_KEY": "di_monitor_oil_cooler_fan",
+    "APP_DISPLAY_NAME": "Oil Cooler Fan",
+    "di_name": "Oil Cooler Fan",
+    "di_pin": 1,
+    "alarm_when": "low",
+    "hold_seconds": 30.0,
+    "renotify_seconds": 0.0,
+    "notify_on_clear": true,
+    "notifications_enabled": true,
+    "arm_di_pin": 3,
+    "arm_di_level": "high"
+}

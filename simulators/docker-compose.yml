@@ -1,29 +1,61 @@
+# Hardware-free bench: device agent + the platform interface's simulator
+# driver (web UI on :8080 to set digital inputs by hand) + the three Station 8
+# DI Monitor installs (compressor, oil cooler fan, isolator).
+#
+#   cd simulators && docker compose up --build
+#
+# Then on :8080 drive DI3 (isolator power) and DI0 / DI1 LOW and watch the tags:
+#   curl -sk https://localhost:49100/ch/v1/agent/1/tag_values/aggregate
+#
+# Host networking, so this runs on Linux (or a Doovit), not Docker Desktop.
+
 services:
-  # device_agent:
-  #   image: spaneng/doover_device_agent:apps
-  #   network_mode: host
+  device_agent:
+    image: spaneng/doover_device_agent:apps
+    network_mode: host
+    environment:
+      - AGENT_ID=1
 
-  # sample_simulator:
-  #   build: ./sample
-  #   network_mode: host
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - device_agent
-  #   environment:
-  #     - APP_KEY=sim_app_key
+  platform_interface:
+    image: spaneng/doover_platform_iface
+    network_mode: host
+    restart: unless-stopped
+    command: ["--type", "sim"]
+    environment:
+      - APP_KEY=platform_interface
 
-  di_monitor_application:
+  di_monitor_compressor:
     build: ../
     network_mode: host
     restart: unless-stopped
-    # depends_on:
-    #   - device_agent
-    #   - sample_simulator
+    depends_on: [device_agent, platform_interface]
+    volumes:
+      - ./compressor_config.json:/app/simulators/config.json
     environment:
-      - APP_KEY=test_app_key
-      - CONFIG_FP=/app/simulators/app_config.json
-    entrypoint: [
-      "doover-app-run", 
-      "--dda-uri=192.168.50.86:50051", 
-      "--plt-uri=192.168.50.86:50053"
-    ]
+      - APP_KEY=di_monitor_compressor
+      - CONFIG_FP=/app/simulators/config.json
+      - HEALTHCHECK_PORT=49301
+
+  di_monitor_oil_cooler_fan:
+    build: ../
+    network_mode: host
+    restart: unless-stopped
+    depends_on: [device_agent, platform_interface]
+    volumes:
+      - ./fan_config.json:/app/simulators/config.json
+    environment:
+      - APP_KEY=di_monitor_oil_cooler_fan
+      - CONFIG_FP=/app/simulators/config.json
+      - HEALTHCHECK_PORT=49302
+
+  di_monitor_isolator:
+    build: ../
+    network_mode: host
+    restart: unless-stopped
+    depends_on: [device_agent, platform_interface]
+    volumes:
+      - ./isolator_config.json:/app/simulators/config.json
+    environment:
+      - APP_KEY=di_monitor_isolator
+      - CONFIG_FP=/app/simulators/config.json
+      - HEALTHCHECK_PORT=49303

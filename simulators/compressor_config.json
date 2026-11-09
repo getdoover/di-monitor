@@ -1,0 +1,14 @@
+{
+    "APP_INSTALL_KEY": "di_monitor_compressor",
+    "APP_KEY": "di_monitor_compressor",
+    "APP_DISPLAY_NAME": "Compressor",
+    "di_name": "Compressor",
+    "di_pin": 0,
+    "alarm_when": "low",
+    "hold_seconds": 30.0,
+    "renotify_seconds": 0.0,
+    "notify_on_clear": true,
+    "notifications_enabled": true,
+    "arm_di_pin": 3,
+    "arm_di_level": "high"
+}
