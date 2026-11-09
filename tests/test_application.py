@@ -1,6 +1,9 @@
 """The application end to end, faked only at fetch_di / tags / notifications / clock."""
 
 from di_monitor.app_config import ALARM_MESSAGE_DEFAULT
+from di_monitor.app_notifications import DiMonitorNotifications
+
+from .harness import APP_KEY, run
 
 HIGH, LOW = True, False
 
@@ -268,3 +271,38 @@ def test_bad_message_template_does_not_raise(rig):
 
 def test_default_messages():
     assert "{di_name}" in ALARM_MESSAGE_DEFAULT
+
+
+# --- Setup ---------------------------------------------------------------
+
+
+def test_notifications_get_app_key_stamped_after_construction(rig):
+    # run_app (pydoover <= 1.18.4) builds the notifications set with
+    # app_key=None and stamps the key onto the app afterwards, not onto it.
+    r = rig(hold_seconds=1.0)
+    r.app.notifications = DiMonitorNotifications(None, r.app)
+    run(r.app.setup())
+    assert r.app.notifications.app_key == APP_KEY
+    r.set(0, LOW)
+    r.run_for(3)
+    assert r.events() == ["alarm"]
+    assert str(r.sent[0]["topic"]).endswith(f"/{APP_KEY}/alarm")
+
+
+def test_poll_period_defaults_to_one_second(rig):
+    assert rig().app.loop_target_period == 1.0
+
+
+def test_poll_period_from_config(rig):
+    assert rig(poll_period_seconds=5.0).app.loop_target_period == 5.0
+
+
+def test_longer_poll_period_keeps_wall_clock_hold(rig):
+    # HoldAlarm times on the clock, not on samples: 5 s polls trip a 30 s hold
+    # on the sample that lands at 30 s, same as 1 s polls.
+    r = rig(hold_seconds=30.0, poll_period_seconds=5.0)
+    r.set(0, LOW)
+    r.tick(5.0, 6)  # first low sample at 5 s, then 10..30 s: 25 s held
+    assert r.sent == []
+    r.tick(5.0)
+    assert r.events() == ["alarm"]
