@@ -1,8 +1,9 @@
 """DI Monitor: a hold-time alarm on one Doovit digital input.
 
-Once a second: read the input (and the arm input, if one is configured), feed
-:class:`HoldAlarm`, act on its event, publish tags. All judgement about timing
-lives in :mod:`hold_alarm`; this file is the I/O around it.
+Every Poll Period Seconds (default 1 s): read the input (and the arm input, if
+one is configured), feed :class:`HoldAlarm`, act on its event, publish tags.
+All judgement about timing lives in :mod:`hold_alarm`; this file is the I/O
+around it.
 
 Unknown readings: ``fetch_di`` returns ``None`` when the platform interface
 request fails. That sample is skipped (the hold timer is neither reset nor
@@ -30,8 +31,6 @@ from .hold_alarm import AlarmEvent, HoldAlarm
 
 log = logging.getLogger(__name__)
 
-LOOP_PERIOD_S = 1.0
-
 
 class _SafeDict(dict):
     def __missing__(self, key):
@@ -57,8 +56,17 @@ class DiMonitorApplication(Application):
     notifications_cls = DiMonitorNotifications
 
     async def setup(self):
-        self.loop_target_period = LOOP_PERIOD_S
+        # pydoover's run_app stamps the app key onto every component it knows
+        # about after construction — but not onto the notifications set, which
+        # was built with ``app_key=None`` and so refused every send with
+        # "Application key has not been set" (pydoover <= 1.18.4; station-8,
+        # 2026-11-09: the first alarm crash-looped di_monitor_compressor).
+        # Fixed upstream in pydoover; harmless once that lands.
+        if self.notifications is not None and not self.notifications.app_key:
+            self.notifications.app_key = self.app_key
+
         c = self.config
+        self.loop_target_period = float(c.poll_period_seconds.value)
         self.di_name: str = str(c.di_name.value)
         self.di_pin: int = int(c.di_pin.value)
         self.alarm_high: bool = c.alarm_when.value == "high"

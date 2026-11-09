@@ -11,8 +11,8 @@ notification.
 
 ## How it works
 
-- About once a second the app reads the input with `fetch_di` (and the arm
-  input, if configured).
+- Every **Poll Period Seconds** (default 1 s) the app reads the input with
+  `fetch_di` (and the arm input, if configured).
 - The input is **active** when it reads at the **Alarm When** level.
 - When it has been active, unbroken, for **Hold Seconds**, the alarm **trips**:
   the UI warning appears, `trip_count` goes up, and an `alarm` notification
@@ -62,6 +62,7 @@ for status-only monitors.
 | `clear_message` | String | `{di_name} back to normal` | Cleared notification text. |
 | `arm_di_pin` | Integer 0-3, optional | unset (always armed) | Input that arms the alarm. |
 | `arm_di_level` | `low` \| `high` | `high` | Level of `arm_di_pin` at which the alarm is armed. |
+| `poll_period_seconds` | Number 0.5-60 (advanced) | `1` | How often the input(s) are read. Hold timing is wall-clock, so a longer period only delays detection by up to one period; each read is a Doovit MCU round trip. |
 
 Message placeholders: `{di_name}`, `{di_pin}`, `{hold_seconds}`,
 `{active_seconds}`. Unknown placeholders are left as written.

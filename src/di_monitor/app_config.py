@@ -95,6 +95,20 @@ class DiMonitorConfig(config.Schema):
         default="high",
         name="arm_di_level",
     )
+    poll_period_seconds = config.Number(
+        "Poll Period Seconds",
+        description=(
+            "How often the input (and the arm input, if set) is read. The hold "
+            "timer runs on wall-clock time, so a longer period only delays "
+            "detection by up to one period. Each read is a round trip to the "
+            "Doovit MCU: raise this to cut I/O load."
+        ),
+        default=1.0,
+        minimum=0.5,
+        maximum=60,
+        advanced=True,
+        name="poll_period_seconds",
+    )
     position = ApplicationPosition()
 
 
