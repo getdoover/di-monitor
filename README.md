@@ -1,188 +1,173 @@
 # DI Monitor
 
-A Doover device application that monitors digital and analog inputs for state changes and sends configurable notifications when triggered.
+A Doover 2 device application that watches one Doovit digital input and raises
+an alarm when the input stays in its alarm state for a configurable **hold
+time**. Optionally, the alarm is only **armed** while a second digital input is
+at a given level (for example "isolator power present"). The alarm shows as a
+warning in the app's UI and, unless turned off, is sent as a Doover
+notification.
 
-## Overview
+`allow_many` is on: install it once per input you want to watch.
 
-DI Monitor watches a specified input channel and detects transitions between triggered and untriggered states. When a trigger event occurs, it can send alert messages, track trigger counts, and measure how long the input remains in the triggered state.
+## How it works
 
-**Common use cases:**
-- Pump fault monitoring
-- Door/window sensor alerts
-- Equipment alarm detection
-- Industrial equipment state tracking
+- About once a second the app reads the input with `fetch_di` (and the arm
+  input, if configured).
+- The input is **active** when it reads at the **Alarm When** level.
+- When it has been active, unbroken, for **Hold Seconds**, the alarm **trips**:
+  the UI warning appears, `trip_count` goes up, and an `alarm` notification
+  (severity Warn) is sent.
+- While it stays active, the alarm is re-sent every **Renotify Seconds**.
+  `0` means **never**: one notification per trip.
+- When a tripped alarm returns to normal, a `cleared` notification (severity
+  Info) is sent if **Notify On Clear** is on. A blip shorter than the hold time
+  never sends anything, not even a clear.
+- A read that fails (`fetch_di` returns `None` or raises) is **unknown**. The
+  sample is skipped: the hold timer is neither reset nor tripped by it, and
+  `di_read_ok` goes false. Wall time still passes, so a valid active reading
+  afterwards counts from the original start.
 
-## Features
+### Arming
 
-- Monitor digital inputs (rising/falling edge detection)
-- Monitor analog inputs with voltage thresholds (12V or 24V modes)
-- Configurable alert messages on trigger and untrigger events
-- Real-time duration tracking during trigger events
-- Cumulative statistics (total trigger count and duration)
-- Persistent state across restarts via Doover tags
+If **Arm DI Pin** is set, the alarm logic only runs while that input is at
+**Arm DI Level**. While not armed:
+
+- the hold timer is reset, so arming again starts the hold from zero;
+- an active alarm is cleared **without a `cleared` notification**. Losing the
+  arm condition (e.g. the isolator being switched off) is not the fault going
+  away, so "back to normal" would be misleading. The UI status shows
+  "Not armed".
+
+If the arm input itself can't be read, the sample is skipped the same way as
+an unreadable main input.
+
+### Notifications off
+
+With **Notifications Enabled** off, nothing is ever sent to the notifications
+channel. The UI still shows the warning, alarm state and trip count. Use this
+for status-only monitors.
 
 ## Configuration
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `di_name` | string | Yes | - | Display name for the input being monitored |
-| `di_channel` | integer | Yes | - | Channel number to monitor (0+) |
-| `di_triggered_state` | enum | No | `rising` | Trigger condition: `rising`, `falling`, `VI+`, or `VI-` |
-| `send_triggered_alert` | boolean | No | `true` | Send alert when input is triggered |
-| `send_untriggered_alert` | boolean | No | `false` | Send alert when input returns to untriggered |
-| `alert_message` | string | Yes | - | Message to send on trigger |
-| `alert_complete_message` | string | Yes | - | Message to send on untrigger |
-| `voltage_state` | enum | No | `24V` | Voltage mode for analog inputs: `12V` or `24V` |
-| `show_triggered_count` | boolean | Yes | - | Display trigger count in UI |
-| `show_triggered_duration` | boolean | No | `true` | Display duration in UI |
+| Key | Type | Default | Description |
+|---|---|---|---|
+| `di_name` | String | required | What the input is (e.g. "Compressor"). Used in the UI and messages. |
+| `di_pin` | Integer 0-3 | required | Digital input to monitor. |
+| `alarm_when` | `low` \| `high` | `low` | The level that counts as active. |
+| `hold_seconds` | Number ≥ 0 | `30` | How long the input must stay active before the alarm trips. |
+| `renotify_seconds` | Number ≥ 0 | `0` | Re-send interval while active. `0` = never. |
+| `notify_on_clear` | Boolean | `true` | Send `cleared` when a tripped alarm returns to normal. |
+| `notifications_enabled` | Boolean | `true` | When false, nothing is sent; the UI still warns. |
+| `alarm_message` | String | `{di_name} active for longer than {hold_seconds} s` | Alarm notification and UI warning text. |
+| `clear_message` | String | `{di_name} back to normal` | Cleared notification text. |
+| `arm_di_pin` | Integer 0-3, optional | unset (always armed) | Input that arms the alarm. |
+| `arm_di_level` | `low` \| `high` | `high` | Level of `arm_di_pin` at which the alarm is armed. |
 
-### Example Configuration
+Message placeholders: `{di_name}`, `{di_pin}`, `{hold_seconds}`,
+`{active_seconds}`. Unknown placeholders are left as written.
+
+## Tags
+
+| Tag | Meaning |
+|---|---|
+| `di_state` | Last valid reading of the input (true = HIGH). |
+| `di_read_ok` | False while the input (or arm input) can't be read. |
+| `armed` | Whether the alarm logic is running. Always true without an arm input. |
+| `alarm_active` | The alarm is tripped. |
+| `active_seconds` | How long the input has been continuously active. |
+| `trip_count` | Number of trips. Kept in `tag_values`, so it survives restarts. |
+| `last_trip_at` | Time of the last trip, epoch milliseconds. |
+| `status` | "Normal", "Active N s / hold H s", "ALARM: ...", "Not armed ...", "Input unreadable". |
+
+## UI
+
+A warning indicator (shown only while the alarm is tripped, with the alarm
+message), status line, input state, armed state (only when an arm input is
+set), alarm active, "Active For (hold H s)", trip count, last trip time and
+whether the input is readable.
+
+## Notifications
+
+| Event | Severity | When |
+|---|---|---|
+| `alarm` | Warn | On trip, and every `renotify_seconds` while active (if > 0). |
+| `cleared` | Info | When a tripped alarm returns to normal (if `notify_on_clear`). |
+
+Neither is sent when `notifications_enabled` is false. Neither is sent when
+the alarm is cleared by disarming.
+
+## Example: Maxitool Porgera Station 8
+
+Three installs. DI3 is wired to isolator power: when it is LOW the isolator
+is off, and neither the compressor nor the oil cooler fan can start, so those
+two alarms are armed only while DI3 is HIGH. DI0 and DI1 read LOW when the load
+is running.
+
+Compressor (`di_monitor_compressor`):
 
 ```json
-{
-    "di_name": "Pump Fault",
-    "di_channel": 0,
-    "di_triggered_state": "VI+",
-    "send_triggered_alert": true,
-    "send_untriggered_alert": false,
-    "alert_message": "Pump has just entered fault state",
-    "alert_complete_message": "Pump is no longer faulting",
-    "voltage_state": "12V",
-    "show_triggered_count": true,
-    "show_triggered_duration": true
-}
+{"di_name": "Compressor", "di_pin": 0, "alarm_when": "low",
+ "hold_seconds": 30, "renotify_seconds": 0, "notify_on_clear": true,
+ "arm_di_pin": 3, "arm_di_level": "high"}
 ```
 
-### Trigger States
+Oil cooler fan (`di_monitor_oil_cooler_fan`):
 
-**Digital Inputs:**
-- `rising` - Trigger when input goes HIGH
-- `falling` - Trigger when input goes LOW
-
-**Analog Inputs:**
-- `VI+` - Trigger when voltage rises above threshold
-- `VI-` - Trigger when voltage falls below threshold
-
-Analog thresholds:
-- 12V mode: 8V threshold
-- 24V mode: 18V threshold
-
-## Project Structure
-
-```
-di-monitor/
-├── src/di_monitor/
-│   ├── __init__.py          # Entry point
-│   ├── application.py       # Main application logic
-│   ├── app_config.py        # Configuration schema
-│   ├── app_ui.py            # UI variable definitions
-│   └── utils.py             # Utility functions
-├── tests/
-│   └── test_imports.py      # Test suite
-├── simulators/
-│   ├── sample/              # Sample simulator for testing
-│   ├── docker-compose.yml   # Simulator orchestration
-│   └── app_config.json      # Sample configuration
-├── Dockerfile               # Production container build
-├── pyproject.toml           # Project dependencies
-├── doover_config.json       # Doover app metadata
-└── README.md
+```json
+{"di_name": "Oil Cooler Fan", "di_pin": 1, "alarm_when": "low",
+ "hold_seconds": 30, "renotify_seconds": 0, "notify_on_clear": true,
+ "arm_di_pin": 3, "arm_di_level": "high"}
 ```
 
-## Prerequisites
+Isolator (`di_monitor_isolator`): UI warning only, no notifications:
 
-- Python 3.11+
-- [UV](https://github.com/astral-sh/uv) package manager
-- Docker and Docker Compose (for containerized deployment)
-- Doover CLI (`pydoover`)
+```json
+{"di_name": "Isolator", "di_pin": 3, "alarm_when": "low",
+ "hold_seconds": 5, "notifications_enabled": false,
+ "alarm_message": "Isolator is switched off: the compressor and oil cooler fan cannot run",
+ "clear_message": "Isolator power restored"}
+```
+
+The hold times for the compressor and fan are placeholders until site
+confirms them.
 
 ## Development
 
-### Install Dependencies
-
 ```bash
-uv sync --all-extras --dev
+uv sync
+uv run pytest
+uvx ruff check . && uvx ruff format --check .
 ```
 
-### Run Locally
+`uv run export-config`, `export-ui` and `export-notifications` write the
+generated schemas into `doover_config.json` so you can inspect them. Don't
+commit them: `doover app publish` generates them at publish time. Revert the
+file afterwards.
 
-```bash
-doover app run
+`simulators/docker-compose.yml` runs the three Station 8 installs against the
+platform interface's simulator driver (Linux / host networking).
+
+CI is the shared `getdoover/workflows` `app.yml` (lint, format, schema
+validation, tests, image smoke test, publish and release).
+
+## Project structure
+
 ```
-
-### Run Tests
-
-```bash
-uv run pytest tests/
+src/di_monitor/
+├── __init__.py           entry point
+├── application.py        loop: read inputs, feed HoldAlarm, notify, publish tags
+├── hold_alarm.py         HoldAlarm + AlarmEvent (pure, clock passed in)
+├── app_config.py         config schema
+├── app_tags.py           tags
+├── app_ui.py             UI
+└── app_notifications.py  alarm / cleared notifications
+tests/
+├── harness.py            real app with fake fetch_di, tags, notifications, clock
+├── test_hold_alarm.py
+├── test_application.py
+└── test_imports.py
 ```
-
-### Linting
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
-```
-
-## Simulator
-
-The `simulators/` directory provides a testing environment with a sample data source.
-
-```bash
-cd simulators/
-docker-compose up
-```
-
-This starts both the DI Monitor application and a simulator that generates sample input values.
-
-## Deployment
-
-### Build Docker Image
-
-```bash
-docker build -t di-monitor .
-```
-
-The Dockerfile supports multi-architecture builds (linux/amd64, linux/arm64).
-
-### CI/CD
-
-The repository includes GitHub Actions workflows:
-
-- **lint-and-test.yml** - Runs on all branches except main
-- **build-image.yml** - Builds and pushes to `ghcr.io/getdoover/di-monitor` on main branch
-
-## How It Works
-
-1. **Setup Phase**: The application initializes, loads persisted statistics from tags, and fetches the initial input state.
-
-2. **Main Loop**: Every second, the application:
-   - Reads the current input value
-   - Detects state transitions
-   - Updates duration counters for active triggers
-   - Handles missed pulse events via fallback detection
-
-3. **On Trigger**: When the input enters the triggered state:
-   - Increments the trigger count
-   - Publishes an alert to the `significantEvent` channel (if enabled)
-   - Starts tracking trigger duration
-
-4. **On Untrigger**: When the input returns to normal:
-   - Calculates elapsed trigger duration
-   - Adds to cumulative triggered time
-   - Publishes an untrigger alert (if enabled)
-   - Persists statistics to tags
-
-## UI Variables
-
-The application exposes the following UI variables:
-
-| Variable | Type | Description |
-|----------|------|-------------|
-| `di_state` | Boolean | Current input state (true = triggered) |
-| `last_triggered_duration` | Text | Duration of current trigger event (HH:MM:SS) |
-| `triggered_duration` | Text | Total accumulated trigger time (HH:MM:SS) |
-| `triggered_count` | Numeric | Total number of trigger events (optional) |
 
 ## License
 
-Proprietary - Doover
+Apache 2.0. See `LICENSE`.

@@ -1,0 +1,12 @@
+{
+    "APP_INSTALL_KEY": "di_monitor_isolator",
+    "APP_KEY": "di_monitor_isolator",
+    "APP_DISPLAY_NAME": "Isolator",
+    "di_name": "Isolator",
+    "di_pin": 3,
+    "alarm_when": "low",
+    "hold_seconds": 5.0,
+    "notifications_enabled": false,
+    "alarm_message": "Isolator is switched off: the compressor and oil cooler fan cannot run",
+    "clear_message": "Isolator power restored"
+}

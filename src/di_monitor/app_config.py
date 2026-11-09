@@ -1,182 +1,108 @@
 from pathlib import Path
 
 from pydoover import config
+from pydoover.config import ApplicationPosition
 
-from enum import Enum
+LEVELS = ["low", "high"]
 
-class DiState(Enum):
-    HIGH = "rising"
-    LOW = "falling"
-    AI_RISING = "VI+"
-    AI_FALLING = "VI-"
-    
-class VoltageState(Enum):
-    V12 = "12V"
-    V24 = "24V"
+ALARM_MESSAGE_DEFAULT = "{di_name} active for longer than {hold_seconds} s"
+CLEAR_MESSAGE_DEFAULT = "{di_name} back to normal"
+
+PLACEHOLDER_HELP = (
+    "Placeholders: {di_name}, {di_pin}, {hold_seconds}, {active_seconds}."
+)
 
 
 class DiMonitorConfig(config.Schema):
-    def __init__(self):
-        self.di_name = config.String(
-            "DI Name",
-            description="The name of the Digital Input to monitor"
-        )
-        self.di_channel = config.Integer(
-            "DI Channel",
-            minimum=0,
-            description="The channel of the Digital Input to monitor"
-        )
-        self.di_state_enum = config.Enum(
-            "DI Triggered State",
-            choices=DiState,
-            default=DiState.HIGH,
-            description=(
-                "The state of the Digital Input to monitor, rising or falling "
-                "for a digital input, or VI+ or VI- for an analog input"
-            )
-        )
-        self.send_triggered_alert = config.Boolean(
-            "Send Triggered Alert",
-            default=True,
-            description=(
-                "Whether or not to send an alert when the Digital Input is "
-                "triggered"
-            )
-        )
-        self.send_untriggered_alert = config.Boolean(
-            "Send Untriggered Alert",
-            default=False,
-            description=(
-                "Whether or not to send an alert when the Digital Input is "
-                "untriggered"
-            )
-        )
-        self.alert_msg = config.String(
-            "Alert Message",
-            description="The message to send when the Digital Input is triggered"
-        )
-        self.untriggered_msg = config.String(
-            "Alert Complete Message",
-            default="",
-            description="The message to send when the Digital Input is untriggered"
-        )
-        self.voltage_state_enum = config.Enum(
-            "Voltage State",
-            choices=VoltageState,
-            default=VoltageState.V24,
-            description="The voltage state of the Digital Input"
-        )
-        self.show_triggered_count = config.Boolean(
-            "Show Triggered Count",
-            description="Whether or not to show the triggered count"
-        )
-        self.show_triggered_duration = config.Boolean(
-            "Show Triggered Duration",
-            default=True,
-            description="Whether or not to show the triggered duration"
-        )
-        self.show_last_triggered_duration = config.Boolean(
-            "Show Last Triggered Duration",
-            default=True,
-            description="Whether or not to show the last triggered duration"
-        )
-        self.show_last_triggered_time = config.Boolean(
-            "Show Last Triggered Time",
-            default=False,
-            description="Whether or not to show the last triggered time"
-        )
-        self.timezone = config.String(
-            "Timezone",
-            default="UTC",
-            description="Timezone for displaying the last triggered time (e.g. Australia/Sydney, America/New_York)"
-        )
-        self.position = config.Integer(
-            "Position",
-            description="The position of the pump monitor app in the UI. Smaller is higher, larger is lower. 100 is the default position of most apps.",
-            default=100,
-            minimum=0,
-            maximum=200,
-        )
-        self.stacked = config.Boolean(
-            "Stacked",
-            default=False,
-            description="Whether or not to stack the app in the UI. If True, the elements of the app will appear outside of a container. If False, the elements of the app will appear inside a container."
-        )
-        
-    def get_di_name(self):
-        return self.di_name.value
-    
-    def get_alert_msg(self):
-        return self.alert_msg.value
-    
-    def get_show_triggered_count(self):
-        return self.show_triggered_count.value
-
-    def get_show_last_triggered_duration(self):
-        return self.show_last_triggered_duration.value
-    
-    def get_untriggered_msg(self):
-        return self.untriggered_msg.value
-    
-    def get_di_channel(self):
-        return self.di_channel.value
-    
-    def get_is_ai(self):
-        return self.di_state_enum.value in [
-            DiState.AI_RISING.value,
-            DiState.AI_FALLING.value
-        ]
-    
-    def get_triggered_bool(self):
-        return self.di_state_enum.value in [
-            DiState.AI_RISING.value,
-            DiState.HIGH.value
-        ]
-    
-    def get_triggered_state(self):
-        match self.di_state_enum.value:
-            case DiState.HIGH.value:
-                return DiState.HIGH.value
-            case DiState.LOW.value:
-                return DiState.LOW.value
-            case DiState.AI_RISING.value:
-                if self.voltage_state_enum.value == VoltageState.V12.value:
-                    return DiState.AI_RISING.value + "8"
-                else:
-                    return DiState.AI_RISING.value + "18"
-            case DiState.AI_FALLING.value:
-                if self.voltage_state_enum.value == VoltageState.V12.value:
-                    return DiState.AI_FALLING.value + "8"
-                else:
-                    return DiState.AI_FALLING.value + "18"
-        return self.di_state_enum.value
-    
-    def get_untriggered_state(self):
-        match self.di_state_enum.value:
-            case DiState.HIGH.value:
-                return DiState.LOW.value
-            case DiState.LOW.value:
-                return DiState.HIGH.value
-            case DiState.AI_RISING.value:
-                if self.voltage_state_enum.value == VoltageState.V12.value:
-                    return DiState.AI_FALLING.value + "8"
-                else:
-                    return DiState.AI_FALLING.value + "18"
-            case DiState.AI_FALLING.value:
-                if self.voltage_state_enum.value == VoltageState.V12.value:
-                    return DiState.AI_RISING.value + "8"
-                else:
-                    return DiState.AI_RISING.value + "18"
-
-    def get_position(self):
-        return self.position.value
+    di_name = config.String(
+        "DI Name",
+        description="What the input is, as shown in the UI and in notifications (e.g. Compressor).",
+        name="di_name",
+    )
+    di_pin = config.Integer(
+        "DI Pin",
+        description="Doovit digital input to monitor (0-3).",
+        minimum=0,
+        maximum=3,
+        name="di_pin",
+    )
+    alarm_when = config.Enum(
+        "Alarm When",
+        description="The input level that counts as active (alarming).",
+        choices=LEVELS,
+        default="low",
+        name="alarm_when",
+    )
+    hold_seconds = config.Number(
+        "Hold Seconds",
+        description="How long the input must stay active, unbroken, before the alarm trips.",
+        minimum=0,
+        default=30.0,
+        name="hold_seconds",
+    )
+    renotify_seconds = config.Number(
+        "Renotify Seconds",
+        description="While the alarm stays active, send it again this often. 0 = never re-notify.",
+        minimum=0,
+        default=0.0,
+        name="renotify_seconds",
+    )
+    notify_on_clear = config.Boolean(
+        "Notify On Clear",
+        description="Send a 'cleared' notification when a tripped alarm returns to normal.",
+        default=True,
+        name="notify_on_clear",
+    )
+    notifications_enabled = config.Boolean(
+        "Notifications Enabled",
+        description=(
+            "Send alarm / cleared notifications. When off, nothing is sent; "
+            "the UI still shows the warning."
+        ),
+        default=True,
+        name="notifications_enabled",
+    )
+    alarm_message = config.String(
+        "Alarm Message",
+        description="Message sent (and shown in the UI warning) when the alarm trips. "
+        + PLACEHOLDER_HELP,
+        default=ALARM_MESSAGE_DEFAULT,
+        name="alarm_message",
+    )
+    clear_message = config.String(
+        "Clear Message",
+        description="Message sent when a tripped alarm clears. " + PLACEHOLDER_HELP,
+        default=CLEAR_MESSAGE_DEFAULT,
+        name="clear_message",
+    )
+    arm_di_pin = config.Integer(
+        "Arm DI Pin",
+        description=(
+            "Optional. Only run the alarm while this digital input is at Arm DI "
+            "Level (e.g. isolator power). Leave empty to always be armed. While "
+            "not armed the hold timer resets and an active alarm clears without "
+            "a notification."
+        ),
+        minimum=0,
+        maximum=3,
+        default=None,
+        name="arm_di_pin",
+    )
+    arm_di_level = config.Enum(
+        "Arm DI Level",
+        description="The level of Arm DI Pin at which the alarm is armed.",
+        choices=LEVELS,
+        default="high",
+        name="arm_di_level",
+    )
+    position = ApplicationPosition()
 
 
 def export():
-    DiMonitorConfig().export(
-        Path(__file__).parents[2] / "doover_config.json",
-        "di_monitor"
+    DiMonitorConfig.export(
+        Path(__file__).parents[2] / "doover_config.json", "di_monitor"
     )
+
 
 if __name__ == "__main__":
     export()
